@@ -874,7 +874,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
 
                 # compute the previous noisy sample x_t -> x_t-1
                 latents_dtype = latents.dtype
-                print(i, len(timesteps), len(sigmas))
+                print(v_hat_t.mean())
                 latents = latents + v_hat_t * (sigmas[i] - sigmas[i+1])
                 # latents = self.scheduler.step(v_hat_t, t, latents, return_dict=False)[0]
 
