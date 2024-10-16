@@ -1,6 +1,6 @@
 import torch
 
-from diffusers import FluxRFInversionPipeline
+from pipeline_flux_rf_inversion import FluxRFInversionPipeline
 from diffusers.utils import load_image
 
 device = "cuda"

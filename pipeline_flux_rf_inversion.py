@@ -33,8 +33,8 @@ from diffusers.utils import (
     unscale_lora_layers,
 )
 from diffusers.utils.torch_utils import randn_tensor
-from diffusers..pipeline_utils import DiffusionPipeline
-from diffusers.pipeline_output import FluxPipelineOutput
+from diffusers.pipelines.pipeline_utils import DiffusionPipeline
+from diffusers.pipelines.flux.pipeline_output import FluxPipelineOutput
 
 
 if is_torch_xla_available():
