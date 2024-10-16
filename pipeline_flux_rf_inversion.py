@@ -855,9 +855,9 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
 
                 # broadcast to batch dimension in a way that's compatible with ONNX/Core ML
                 timestep = t.expand(latents.shape[0]).to(latents.dtype)
-                v_t = -self.transformer(
+                v_t = self.transformer(
                     hidden_states=latents,
-                    timestep=1 - timestep / 1000,
+                    timestep=timestep / 1000,
                     guidance=guidance,
                     pooled_projections=pooled_prompt_embeds,
                     encoder_hidden_states=prompt_embeds,
@@ -876,8 +876,8 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 latents_dtype = latents.dtype
                 print(v_hat_t.mean())
                 print(sigmas[i], sigmas[i+1])
-                latents = latents + v_hat_t * (sigmas[i] - sigmas[i+1])
-                # latents = self.scheduler.step(v_hat_t, t, latents, return_dict=False)[0]
+                # latents = latents + v_hat_t * (sigmas[i] - sigmas[i+1])
+                latents = self.scheduler.step(v_t, t, latents, return_dict=False)[0]
 
                 if latents.dtype != latents_dtype:
                     if torch.backends.mps.is_available():
