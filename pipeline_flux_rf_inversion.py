@@ -566,7 +566,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         """
         device = image_latents.device
         batch_size = image_latents.shape[0]
-        Y_t = image_latents
+        Y_t = image_latents.clone()
         y_1 = torch.randn_like(Y_t)
 
         for i in range(num_inference_steps):
@@ -586,10 +586,10 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
 
             # get the conditional vector field
             u_t_i_cond = (y_1 - Y_t) / (1 - t_i)
-            print(u_t_i_cond.dtype)
+
             # controlled vector field
             u_hat_t_i = u_t_i + torch.tensor(gamma) * (u_t_i_cond - u_t_i)
-            print(u_hat_t_i.dtype)
+
             # update Y_t
             Y_t = Y_t + u_hat_t_i * (self.scheduler.sigmas[i+1] - self.scheduler.sigmas[i])
 
@@ -845,7 +845,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
 
         # 6. Denoising loop
         with self.progress_bar(total=num_inference_steps) as progress_bar:
-            y_0 = latents
+            y_0 = latents.clone()
             for i, t in enumerate(timesteps):
                 t_i = t / len(timesteps)
                 if self.interrupt:
