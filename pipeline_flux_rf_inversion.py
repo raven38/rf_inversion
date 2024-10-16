@@ -863,7 +863,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 t_i = i / len(timesteps)
                 if self.interrupt:
                     continue
-
+                print(y_0.mean(), latents.mean())
                 # broadcast to batch dimension in a way that's compatible with ONNX/Core ML
                 timestep = t.expand(latents.shape[0]).to(latents.dtype)
                 v_t = -self.transformer(
@@ -879,7 +879,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 )[0]
 
                 v_t_cond = (y_0 - latents) / (1 - t_i)
-                print(y_0.mean())
+
                 if start_timestep <= i < stop_timestep:
                     # controlled vector field
                     v_hat_t = v_t + eta * (v_t_cond - v_t)
@@ -888,8 +888,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
 
                 # compute the previous noisy sample x_t -> x_t-1
                 latents_dtype = latents.dtype
-                print(v_hat_t.mean())
-                print(sigmas[i], sigmas[i+1])
+
                 latents = latents + v_hat_t * (sigmas[i] - sigmas[i+1])
                 # latents = self.scheduler.step(v_t, t, latents, return_dict=False)[0]
 
