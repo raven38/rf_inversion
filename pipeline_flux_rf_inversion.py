@@ -556,11 +556,11 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
 
         noise = randn_tensor(shape, generator=generator, device=device, dtype=dtype)
         image_latents = self._pack_latents(image_latents, batch_size, num_channels_latents, height, width)
-        latents = self.controlled_forward_ode(image_latents, num_inference_steps, gamma=gamma, null_prompt_embeds=null_prompt_embeds, null_pooled_prompt_embeds=null_pooled_prompt_embeds, null_text_ids=null_text_ids)
+        latents = self.controlled_forward_ode(image_latents, latent_image_ids, num_inference_steps, gamma=gamma, null_prompt_embeds=null_prompt_embeds, null_pooled_prompt_embeds=null_pooled_prompt_embeds, null_text_ids=null_text_ids)
 
         return latents, latent_image_ids
     
-    def controlled_forward_ode(self, image_latents, num_inference_steps, gamma, null_prompt_embeds, null_pooled_prompt_embeds, null_text_ids):
+    def controlled_forward_ode(self, image_latents, latent_image_ids, num_inference_steps, gamma, null_prompt_embeds, null_pooled_prompt_embeds, null_text_ids):
         """
         Eq 8 dY_t = [u_t(Y_t) + γ(u_t(Y_t|y_1) - u_t(Y_t))]dt
         """
@@ -581,6 +581,9 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 pooled_projections=null_pooled_prompt_embeds,
                 encoder_hidden_states=null_prompt_embeds,
                 txt_ids=null_text_ids,
+                img_ids=latent_image_ids,
+                joint_attention_kwargs=self.joint_attention_kwargs,
+                return_dict=False,                
             )
 
             # get the conditional vector field
