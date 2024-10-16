@@ -841,9 +841,9 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             latents,
             gamma,
             sigmas,
-            prompt_embeds,
-            pooled_prompt_embeds,
-            text_ids,
+            null_prompt_embeds,
+            null_pooled_prompt_embeds,
+            null_text_ids,
         )
 
         num_warmup_steps = max(len(timesteps) - num_inference_steps * self.scheduler.order, 0)
