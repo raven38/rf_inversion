@@ -848,7 +848,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         with self.progress_bar(total=num_inference_steps) as progress_bar:
             y_0 = latents.clone()
             for i, t in enumerate(timesteps):
-                t_i = t / len(timesteps)
+                t_i = i / len(timesteps)
                 if self.interrupt:
                     continue
 
@@ -873,7 +873,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
 
                 # compute the previous noisy sample x_t -> x_t-1
                 latents_dtype = latents.dtype
-                print(i, timesteps, sigmas)
+                print(i, len(timesteps), len(sigmas))
                 latents = latents + v_hat_t * (sigmas[i] - sigmas[i+1])
                 # latents = self.scheduler.step(v_hat_t, t, latents, return_dict=False)[0]
 
