@@ -873,7 +873,9 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
 
                 # compute the previous noisy sample x_t -> x_t-1
                 latents_dtype = latents.dtype
-                latents = self.scheduler.step(v_hat_t, t, latents, return_dict=False)[0]
+                print(i, timesteps, sigmas)
+                latents = latents + v_hat_t * (sigmas[i] - sigmas[i+1])
+                # latents = self.scheduler.step(v_hat_t, t, latents, return_dict=False)[0]
 
                 if latents.dtype != latents_dtype:
                     if torch.backends.mps.is_available():
