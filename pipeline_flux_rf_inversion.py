@@ -572,7 +572,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         for i in range(num_inference_steps):
             t_i = torch.tensor(i / num_inference_steps, device=device).repeat(batch_size)
             t_i_plus_1 = (i + 1) / num_inference_steps
-
+            print(null_text_ids.shape, latent_image_ids.shape)
             # get the unconditional vector field
             print(Y_t.shape)
             u_t_i = self.transformer(
