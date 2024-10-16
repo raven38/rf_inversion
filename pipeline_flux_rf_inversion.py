@@ -872,7 +872,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 )[0]
 
                 v_t_cond = (y_0 - latents) / (1 - t_i)
-                print(t_i)
+                print(print(y_0.mean()))
                 # controlled vector field
                 v_hat_t = v_t + eta * (v_t_cond - v_t)
 
