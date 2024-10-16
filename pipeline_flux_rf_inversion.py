@@ -589,7 +589,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             u_t_i_cond = (y_1 - Y_t) / (1 - t_i)
 
             # controlled vector field
-            u_hat_t_i = u_t_i + torch.tensor(gamma) * (u_t_i_cond - u_t_i)
+            u_hat_t_i = u_t_i + gamma * (u_t_i_cond - u_t_i)
 
             # update Y_t
             Y_t = Y_t + u_hat_t_i * (sigmas[i+1] - sigmas[i])
