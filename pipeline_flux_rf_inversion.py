@@ -520,6 +520,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         generator,
         latents=None,
         gamma=1.0,
+        num_inference_steps=28,
     ):
         if isinstance(generator, list) and len(generator) != batch_size:
             raise ValueError(
@@ -550,11 +551,11 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             image_latents = torch.cat([image_latents], dim=0)
 
         noise = randn_tensor(shape, generator=generator, device=device, dtype=dtype)
-        latents = self.controlled_forward_ode(image_latents, timestep, noise, gamma=gamma)
+        latents = self.controlled_forward_ode(image_latents, num_inference_steps, gamma=gamma)
         latents = self._pack_latents(latents, batch_size, num_channels_latents, height, width)
         return latents, latent_image_ids
     
-    def controlled_forward_ode(self, image_latents, timestep, noise, gamma):
+    def controlled_forward_ode(self, image_latents, num_inference_steps, gamma):
         """
         Eq 8 dY_t = [u_t(Y_t) + γ(u_t(Y_t|y_1) - u_t(Y_t))]dt
         """
@@ -563,9 +564,9 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         Y_t = image_latents
         y_1 = torch.zeros_like(Y_t)
 
-        for i in range(timestep):
-            t_i = i / timestep
-            t_i_plus_1 = (i + 1) / timestep
+        for i in range(num_inference_steps):
+            t_i = i / num_inference_steps
+            t_i_plus_1 = (i + 1) / num_inference_steps
 
             # get the unconditional vector field
             u_t_i = self.transformer(Y_t, t_i)
@@ -579,7 +580,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             # update Y_t
             Y_t = Y_t + u_hat_t_i * (self.scheduler.sigmas[i+1] - self.scheduler.sigmas[i])
 
-        return Y_t, Y_t_id
+        return Y_t
 
 
     @property
@@ -801,6 +802,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             generator,
             latents,
             gamma,
+            num_inference_steps,
         )
 
         num_warmup_steps = max(len(timesteps) - num_inference_steps * self.scheduler.order, 0)
