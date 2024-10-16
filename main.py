@@ -16,4 +16,4 @@ images = pipe(
     prompt=prompt, image=init_image, num_inference_steps=4, strength=0.95, guidance_scale=0.0
 ).images[0]
 
-images[0].save("output.jpg")
+images.save("output.jpg")
