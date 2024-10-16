@@ -572,7 +572,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
 
             # get the unconditional vector field
             print(Y_t.shape)
-            u_t_i = self.transformer(Y_t, t_i)
+            u_t_i = self.transformer(hidden_states=Y_t, timestep=t_i)
 
             # get the conditional vector field
             u_t_i_cond = (y_1 - Y_t) / (1 - t_i)
