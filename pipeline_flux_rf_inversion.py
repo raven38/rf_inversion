@@ -522,6 +522,9 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         latents=None,
         gamma=1.0,
         num_inference_steps=28,
+        null_prompt_embeds=None,
+        null_pooled_prompt_embeds=None,
+        null_text_ids=None,
     ):
         if isinstance(generator, list) and len(generator) != batch_size:
             raise ValueError(
@@ -553,11 +556,11 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
 
         noise = randn_tensor(shape, generator=generator, device=device, dtype=dtype)
         image_latents = self._pack_latents(image_latents, batch_size, num_channels_latents, height, width)
-        latents = self.controlled_forward_ode(image_latents, num_inference_steps, gamma=gamma)
+        latents = self.controlled_forward_ode(image_latents, num_inference_steps, gamma=gamma, null_prompt_embeds=null_prompt_embeds, null_pooled_prompt_embeds=null_pooled_prompt_embeds, null_text_ids=null_text_ids)
 
         return latents, latent_image_ids
     
-    def controlled_forward_ode(self, image_latents, num_inference_steps, gamma):
+    def controlled_forward_ode(self, image_latents, num_inference_steps, gamma, null_prompt_embeds, null_pooled_prompt_embeds, null_text_ids):
         """
         Eq 8 dY_t = [u_t(Y_t) + γ(u_t(Y_t|y_1) - u_t(Y_t))]dt
         """
@@ -572,7 +575,13 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
 
             # get the unconditional vector field
             print(Y_t.shape)
-            u_t_i = self.transformer(hidden_states=Y_t, timestep=t_i)
+            u_t_i = self.transformer(
+                hidden_states=Y_t, 
+                timestep=t_i, 
+                pooled_projections=null_pooled_prompt_embeds,
+                encoder_hidden_states=null_prompt_embeds,
+                txt_ids=null_text_ids,
+            )
 
             # get the conditional vector field
             u_t_i_cond = (y_1 - Y_t) / (1 - t_i)
@@ -762,6 +771,18 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             max_sequence_length=max_sequence_length,
             lora_scale=lora_scale,
         )
+        (
+            null_prompt_embeds,
+            null_pooled_prompt_embeds,
+            null_text_ids,
+        ) = self.encode_prompt(
+            prompt="",
+            prompt_2="",
+            device=device,
+            num_images_per_prompt=num_images_per_prompt,
+            max_sequence_length=max_sequence_length,
+            lora_scale=lora_scale,
+        )
 
         # 4.Prepare timesteps
         sigmas = np.linspace(1.0, 1 / num_inference_steps, num_inference_steps)
@@ -806,6 +827,9 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             latents,
             gamma,
             num_inference_steps,
+            null_prompt_embeds,
+            null_pooled_prompt_embeds,
+            null_text_ids,
         )
 
         num_warmup_steps = max(len(timesteps) - num_inference_steps * self.scheduler.order, 0)
