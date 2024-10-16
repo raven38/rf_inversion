@@ -567,7 +567,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         device = image_latents.device
         batch_size = image_latents.shape[0]
         Y_t = image_latents
-        y_1 = torch.zeros_like(Y_t)
+        y_1 = torch.randn_like(Y_t)
 
         for i in range(num_inference_steps):
             t_i = torch.tensor(i / num_inference_steps, dtype=Y_t.dtype, device=device).repeat(batch_size)
