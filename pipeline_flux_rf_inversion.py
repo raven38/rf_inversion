@@ -584,7 +584,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 img_ids=latent_image_ids,
                 joint_attention_kwargs=self.joint_attention_kwargs,
                 return_dict=False,                
-            )
+            )[0]
 
             # get the conditional vector field
             u_t_i_cond = (y_1 - Y_t) / (1 - t_i)
