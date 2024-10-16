@@ -859,7 +859,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
 
                 # broadcast to batch dimension in a way that's compatible with ONNX/Core ML
                 timestep = t.expand(latents.shape[0]).to(latents.dtype)
-                v_t = self.transformer(
+                v_t = -self.transformer(
                     hidden_states=latents,
                     timestep=timestep / 1000,
                     guidance=guidance,
