@@ -575,6 +575,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             print(null_text_ids.shape, latent_image_ids.shape)
             # get the unconditional vector field
             print(Y_t.shape)
+            print('dtype', Y_t.dtype, latent_image_ids.dtype, null_pooled_prompt_embeds.dtype, null_text_ids.dtype)
             u_t_i = self.transformer(
                 hidden_states=Y_t, 
                 timestep=t_i, 
