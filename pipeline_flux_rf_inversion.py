@@ -71,6 +71,7 @@ EXAMPLE_DOC_STRING = """
 """
 
 
+
 # Copied from diffusers.pipelines.flux.pipeline_flux.calculate_shift
 def calculate_shift(
     image_seq_len,
@@ -551,8 +552,9 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             image_latents = torch.cat([image_latents], dim=0)
 
         noise = randn_tensor(shape, generator=generator, device=device, dtype=dtype)
+        image_latents = self._pack_latents(image_latents, batch_size, num_channels_latents, height, width)
         latents = self.controlled_forward_ode(image_latents, num_inference_steps, gamma=gamma)
-        latents = self._pack_latents(latents, batch_size, num_channels_latents, height, width)
+
         return latents, latent_image_ids
     
     def controlled_forward_ode(self, image_latents, num_inference_steps, gamma):
@@ -569,6 +571,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             t_i_plus_1 = (i + 1) / num_inference_steps
 
             # get the unconditional vector field
+            print(Y_t.shape)
             u_t_i = self.transformer(Y_t, t_i)
 
             # get the conditional vector field
