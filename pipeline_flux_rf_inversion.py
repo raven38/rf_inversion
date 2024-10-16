@@ -872,7 +872,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 )[0]
 
                 v_t_cond = (y_0 - latents) / (1 - t_i)
-
+                print(t_i)
                 # controlled vector field
                 v_hat_t = v_t + eta * (v_t_cond - v_t)
 
@@ -880,7 +880,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 latents_dtype = latents.dtype
                 print(v_hat_t.mean())
                 print(sigmas[i], sigmas[i+1])
-                latents = latents + v_hat_t * (sigmas[i+1] - sigmas[i])
+                latents = latents + v_hat_t # * (sigmas[i+1] - sigmas[i])
                 # latents = self.scheduler.step(v_t, t, latents, return_dict=False)[0]
 
                 if latents.dtype != latents_dtype:
