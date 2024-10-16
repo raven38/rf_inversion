@@ -880,7 +880,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 latents_dtype = latents.dtype
                 print(v_hat_t.mean())
                 print(sigmas[i], sigmas[i+1])
-                latents = latents + v_hat_t * (sigmas[i] - sigmas[i+1])
+                latents = latents + v_hat_t * (sigmas[i+1] - sigmas[i])
                 # latents = self.scheduler.step(v_t, t, latents, return_dict=False)[0]
 
                 if latents.dtype != latents_dtype:
