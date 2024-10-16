@@ -521,7 +521,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         generator,
         latents=None,
         gamma=1.0,
-        num_inference_steps=28,
+        sigmas=None,
         null_prompt_embeds=None,
         null_pooled_prompt_embeds=None,
         null_text_ids=None,
@@ -556,11 +556,11 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
 
         noise = randn_tensor(shape, generator=generator, device=device, dtype=dtype)
         image_latents = self._pack_latents(image_latents, batch_size, num_channels_latents, height, width)
-        latents = self.controlled_forward_ode(image_latents, latent_image_ids, num_inference_steps, gamma=gamma, null_prompt_embeds=null_prompt_embeds, null_pooled_prompt_embeds=null_pooled_prompt_embeds, null_text_ids=null_text_ids)
+        latents = self.controlled_forward_ode(image_latents, latent_image_ids, sigmas, gamma=gamma, null_prompt_embeds=null_prompt_embeds, null_pooled_prompt_embeds=null_pooled_prompt_embeds, null_text_ids=null_text_ids)
 
         return latents, latent_image_ids
     
-    def controlled_forward_ode(self, image_latents, latent_image_ids, num_inference_steps, gamma, null_prompt_embeds, null_pooled_prompt_embeds, null_text_ids):
+    def controlled_forward_ode(self, image_latents, latent_image_ids, sigmas, gamma, null_prompt_embeds, null_pooled_prompt_embeds, null_text_ids):
         """
         Eq 8 dY_t = [u_t(Y_t) + γ(u_t(Y_t|y_1) - u_t(Y_t))]dt
         """
@@ -568,10 +568,11 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         batch_size = image_latents.shape[0]
         Y_t = image_latents.clone()
         y_1 = torch.randn_like(Y_t)
+        N = len(sigmas)
 
-        for i in range(num_inference_steps):
-            t_i = torch.tensor(i / num_inference_steps, dtype=Y_t.dtype, device=device).repeat(batch_size)
-            t_i_plus_1 = (i + 1) / num_inference_steps
+        for i in range(N):
+            t_i = torch.tensor(i / N, dtype=Y_t.dtype, device=device).repeat(batch_size)
+
             # get the unconditional vector field
             u_t_i = self.transformer(
                 hidden_states=Y_t, 
@@ -591,7 +592,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             u_hat_t_i = u_t_i + torch.tensor(gamma) * (u_t_i_cond - u_t_i)
 
             # update Y_t
-            Y_t = Y_t + u_hat_t_i * (self.scheduler.sigmas[i+1] - self.scheduler.sigmas[i])
+            Y_t = Y_t + u_hat_t_i * (sigmas[i+1] - sigmas[i])
 
         return Y_t
 
@@ -827,7 +828,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             generator,
             latents,
             gamma,
-            num_inference_steps,
+            sigmas,
             null_prompt_embeds,
             null_pooled_prompt_embeds,
             null_text_ids,
