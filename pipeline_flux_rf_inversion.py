@@ -543,6 +543,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
 
         image = image.to(device=device, dtype=dtype)
         image_latents = self._encode_vae_image(image=image, generator=generator)
+
         if batch_size > image_latents.shape[0] and batch_size % image_latents.shape[0] == 0:
             # expand init_latents for batch_size
             additional_image_per_prompt = batch_size // image_latents.shape[0]
@@ -553,12 +554,12 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             )
         else:
             image_latents = torch.cat([image_latents], dim=0)
-
+        ori_image_latents = image_latents.clone()
         noise = randn_tensor(shape, generator=generator, device=device, dtype=dtype)
         image_latents = self._pack_latents(image_latents, batch_size, num_channels_latents, height, width)
         latents = self.controlled_forward_ode(image_latents, latent_image_ids, sigmas, gamma=gamma, null_prompt_embeds=null_prompt_embeds, null_pooled_prompt_embeds=null_pooled_prompt_embeds, null_text_ids=null_text_ids)
 
-        return latents, latent_image_ids
+        return ori_image_latents, latents, latent_image_ids
     
     def controlled_forward_ode(self, image_latents, latent_image_ids, sigmas, gamma, null_prompt_embeds, null_pooled_prompt_embeds, null_text_ids):
         """
@@ -816,7 +817,8 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         # 5. Prepare latent variables
         num_channels_latents = self.transformer.config.in_channels // 4
 
-        latents, latent_image_ids = self.prepare_latents(
+
+        ori_latents, latents, latent_image_ids = self.prepare_latents(
             init_image,
             latent_timestep,
             batch_size * num_images_per_prompt,
@@ -846,7 +848,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
 
         # 6. Denoising loop
         with self.progress_bar(total=num_inference_steps) as progress_bar:
-            y_0 = latents.clone()
+            y_0 = ori_latents.clone()
             for i, t in enumerate(timesteps):
                 t_i = i / len(timesteps)
                 if self.interrupt:
