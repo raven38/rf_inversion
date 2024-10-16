@@ -630,6 +630,8 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         strength: float = 0.6,
         eta: float = 1.0,
         gamma: float = 1.0,
+        start_timestep: int = 0,
+        stop_timestep: int = 6,
         num_inference_steps: int = 28,
         timesteps: List[int] = None,
         guidance_scale: float = 7.0,
@@ -742,6 +744,10 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             callback_on_step_end_tensor_inputs=callback_on_step_end_tensor_inputs,
             max_sequence_length=max_sequence_length,
         )
+
+        # check start_timestep and stop_timestep
+        if start_timestep < 0 or start_timestep > stop_timestep:
+            raise ValueError(f"`start_timestep` should be in [0, stop_timestep] but is {start_timestep}")
 
         self._guidance_scale = guidance_scale
         self._joint_attention_kwargs = joint_attention_kwargs
@@ -874,8 +880,11 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
 
                 v_t_cond = (y_0 - latents) / (1 - t_i)
                 print(y_0.mean())
-                # controlled vector field
-                v_hat_t = v_t + eta * (v_t_cond - v_t)
+                if start_timestep <= i < stop_timestep:
+                    # controlled vector field
+                    v_hat_t = v_t + eta * (v_t_cond - v_t)
+                else:
+                    v_hat_t = v_t
 
                 # compute the previous noisy sample x_t -> x_t-1
                 latents_dtype = latents.dtype

@@ -15,7 +15,8 @@ init_image = load_image(url).resize((1024, 1024))
 prompt = "cat wizard, gandalf, lord of the rings, detailed, fantasy, cute, adorable, Pixar, Disney, 8k"
 
 images = pipe(
-    prompt=prompt, prompt_2=prompt, image=init_image, num_inference_steps=28, strength=0.95, guidance_scale=3.5, gamma=0.5, eta=0.5
+    prompt=prompt, prompt_2=prompt, image=init_image, num_inference_steps=28, strength=0.95, guidance_scale=3.5, 
+    gamma=0.5, eta=0.9, start_timestep=0, stop_timestep=6,
 ).images[0]
 
 images.save("output.jpg")
