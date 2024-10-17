@@ -580,34 +580,34 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             t_i = 1 - t / 1000
             dt = torch.tensor(1 / (N-1), dtype=Y_t.dtype, device=device)
             # get the unconditional vector field
-            # u_t_i = self.transformer(
-            #     hidden_states=Y_t, 
-            #     timestep=torch.tensor(t_i, dtype=Y_t.dtype, device=device).repeat(batch_size), 
-            #     pooled_projections=null_pooled_prompt_embeds,
-            #     encoder_hidden_states=null_prompt_embeds,
-            #     txt_ids=null_text_ids,
-            #     img_ids=latent_image_ids,
-            #     joint_attention_kwargs=self.joint_attention_kwargs,
-            #     return_dict=False,                
-            # )[0]
+            u_t_i = self.transformer(
+                hidden_states=Y_t, 
+                timestep=torch.tensor(t_i, dtype=Y_t.dtype, device=device).repeat(batch_size), 
+                pooled_projections=null_pooled_prompt_embeds,
+                encoder_hidden_states=null_prompt_embeds,
+                txt_ids=null_text_ids,
+                img_ids=latent_image_ids,
+                joint_attention_kwargs=self.joint_attention_kwargs,
+                return_dict=False,                
+            )[0]
 
             # get the conditional vector field
-            # u_t_i_cond = (y_1 - Y_t) / (1 - t_i)
+            u_t_i_cond = (y_1 - Y_t) / (1 - t_i)
 
             # controlled vector field
             # Eq 8 dY_t = [u_t(Y_t) + γ(u_t(Y_t|y_1) - u_t(Y_t))]dt
-            # u_hat_t_i = u_t_i + gamma * (u_t_i_cond - u_t_i)
+            u_hat_t_i = u_t_i + gamma * (u_t_i_cond - u_t_i)
 
             # SDE Eq: 10
-            u_hat_t_i = - 1 / (1 - t_i) * (Y_t - gamma * y_1)
+            # u_hat_t_i = - 1 / (1 - t_i) * (Y_t - gamma * y_1)
 
-            diffusion = torch.sqrt(2 * (1 - gamma)* t_i / (1 - t_i))
-            noise = torch.randn_like(Y_t)
+            # diffusion = torch.sqrt(2 * (1 - gamma)* t_i / (1 - t_i))
+            # noise = torch.randn_like(Y_t)
             # print((u_hat_t_i * dt).mean(), (torch.sqrt(dt) * diffusion * noise).mean())
-            Y_t = Y_t + u_hat_t_i * dt +  torch.sqrt(dt) * diffusion * noise 
+            # Y_t = Y_t + u_hat_t_i * dt +  torch.sqrt(dt) * diffusion * noise 
             # print((Y_t - image_latents).abs().mean())
             # update Y_t
-            # Y_t = Y_t + u_hat_t_i * (sigmas[i] - sigmas[i + 1])
+            Y_t = Y_t + u_hat_t_i * (sigmas[i] - sigmas[i + 1])
 
         return Y_t
 
@@ -893,8 +893,8 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 eta_t = eta if start_timestep <= i < stop_timestep else 0.0
                 if start_timestep <= i < stop_timestep:
                     # controlled vector field
-                    # v_hat_t = v_t + eta * (v_t_cond - v_t)
-                    v_hat_t = ((1 - t_i - eta_t) * latents  + eta_t * t_i * y_0) / (t_i*(1 - t_i)) + 2*(1-t_i)*(1 - eta_t) /t_i * v_t
+                    v_hat_t = v_t + eta * (v_t_cond - v_t)
+                    # v_hat_t = ((1 - t_i - eta_t) * latents  + eta_t * t_i * y_0) / (t_i*(1 - t_i)) + 2*(1-t_i)*(1 - eta_t) /t_i * v_t
                     # print((((1 - t_i - eta_t) * latents  + eta_t * t_i * y_0) / (t_i*(1 - t_i))).mean(),  (2*(1-t_i)*(1 - eta_t) /t_i * v_t).mean())
                 else:
                     v_hat_t = v_t
@@ -903,15 +903,15 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 # compute the previous noisy sample x_t -> x_t-1
                 latents_dtype = latents.dtype
 
-                diffusion = torch.sqrt(2 * (1-t_i) * (1-eta) / t_i)
-                noise = torch.randn_like(latents)
+                # diffusion = torch.sqrt(2 * (1-t_i) * (1-eta) / t_i)
+                # noise = torch.randn_like(latents)
 
-                # latents = latents + v_hat_t * (sigmas[i] - sigmas[i+1])
+                latents = latents + v_hat_t * (sigmas[i] - sigmas[i+1])
                 # print(t_i, timestep / 1000, dt, eta_t, v_t.mean().item(), latents.mean().item(), v_hat_t.mean().item(), diffusion.mean().item(), noise.mean().item())
-                if start_timestep <= i < stop_timestep:
-                   latents = latents + v_hat_t * dt + diffusion * torch.sqrt(dt) * noise
-                else:
-                   latents = latents + v_hat_t * dt
+                # if start_timestep <= i < stop_timestep:
+                #    latents = latents + v_hat_t * dt + diffusion * torch.sqrt(dt) * noise
+                # else:
+                #    latents = latents + v_hat_t * dt
 
                 # latents = self.scheduler.step(v_t, t, latents, return_dict=False)[0]
 
