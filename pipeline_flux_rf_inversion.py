@@ -888,6 +888,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 #     v_hat_t = v_t
                 # SDE Eq: 17
                 v_hat_t = ((1 - t_i - eta_t) * latents  + eta_t * t_i * y_0) / (t_i*(1 - t_i)) + 2*(1-t_i)*(1 - eta_t) /t_i * v_t
+                print((((1 - t_i - eta_t) * latents  + eta_t * t_i * y_0) / (t_i*(1 - t_i))).mean(),  (2*(1-t_i)*(1 - eta_t) /t_i * v_t).mean())
                 # compute the previous noisy sample x_t -> x_t-1
                 latents_dtype = latents.dtype
 
