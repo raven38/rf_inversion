@@ -526,6 +526,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         null_pooled_prompt_embeds=None,
         null_text_ids=None,
         timesteps=None,
+        guidance=None,
     ):
         if isinstance(generator, list) and len(generator) != batch_size:
             raise ValueError(
@@ -563,10 +564,13 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         # print((latents - image_latents).abs().mean())
         image_latents = self._pack_latents(image_latents, batch_size, num_channels_latents, height, width)
         ori_image_latents = image_latents.clone()
-        latents = self.controlled_forward_ode(image_latents, latent_image_ids, sigmas, gamma=gamma, null_prompt_embeds=null_prompt_embeds, null_pooled_prompt_embeds=null_pooled_prompt_embeds, null_text_ids=null_text_ids, timesteps=timesteps)
+        latents = self.controlled_forward_ode(
+            image_latents, 
+            latent_image_ids, 
+            sigmas, gamma=gamma, null_prompt_embeds=null_prompt_embeds, null_pooled_prompt_embeds=null_pooled_prompt_embeds, null_text_ids=null_text_ids, timesteps=timesteps, guidance=guidance)
         return ori_image_latents, latents, latent_image_ids
     
-    def controlled_forward_ode(self, image_latents, latent_image_ids, sigmas, gamma, null_prompt_embeds, null_pooled_prompt_embeds, null_text_ids, timesteps):
+    def controlled_forward_ode(self, image_latents, latent_image_ids, sigmas, gamma, null_prompt_embeds, null_pooled_prompt_embeds, null_text_ids, timesteps, guidance):
         """
         Eq 8 dY_t = [u_t(Y_t) + γ(u_t(Y_t|y_1) - u_t(Y_t))]dt
         """
@@ -583,6 +587,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             u_t_i = self.transformer(
                 hidden_states=Y_t, 
                 timestep=torch.tensor(t_i, dtype=Y_t.dtype, device=device).repeat(batch_size), 
+                guidance=guidance,
                 pooled_projections=null_pooled_prompt_embeds,
                 encoder_hidden_states=null_prompt_embeds,
                 txt_ids=null_text_ids,
@@ -837,6 +842,12 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         # 5. Prepare latent variables
         num_channels_latents = self.transformer.config.in_channels // 4
 
+        # handle guidance
+        if self.transformer.config.guidance_embeds:
+            guidance = torch.full([1], guidance_scale, device=device, dtype=torch.float32)
+            guidance = guidance.expand(latents.shape[0])
+        else:
+            guidance = None
 
         ori_latents, latents, latent_image_ids = self.prepare_latents(
             init_image,
@@ -855,17 +866,13 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             null_pooled_prompt_embeds,
             null_text_ids,
             timesteps=timesteps,
+            guidance=guidance,
         )
 
         num_warmup_steps = max(len(timesteps) - num_inference_steps * self.scheduler.order, 0)
         self._num_timesteps = len(timesteps)
 
-        # handle guidance
-        if self.transformer.config.guidance_embeds:
-            guidance = torch.full([1], guidance_scale, device=device, dtype=torch.float32)
-            guidance = guidance.expand(latents.shape[0])
-        else:
-            guidance = None
+
 
         # 6. Denoising loop
         with self.progress_bar(total=num_inference_steps) as progress_bar:
