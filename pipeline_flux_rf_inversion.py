@@ -861,8 +861,8 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         with self.progress_bar(total=num_inference_steps) as progress_bar:
             y_0 = ori_latents.clone()
             for i, t in enumerate(timesteps):
-                t_i = 1 - (i / (len(timesteps) - 1))
-                dt = 1 / (len(timesteps) - 1)
+                t_i = torch.tensor(1 - (i / (len(timesteps) - 1)), device=device)
+                dt = torch.tensor(1 / (len(timesteps) - 1), device=device)
                 if self.interrupt:
                     continue
                 # broadcast to batch dimension in a way that's compatible with ONNX/Core ML
@@ -893,7 +893,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 # compute the previous noisy sample x_t -> x_t-1
                 latents_dtype = latents.dtype
 
-                diffusion = torch.sqrt(2 * (1-t) * (1-eta) / t)
+                diffusion = torch.sqrt(2 * (1-t_i) * (1-eta) / t_i)
                 noise = torch.randn_like(latents)
 
                 # latents = latents + v_hat_t * (sigmas[i] - sigmas[i+1])
