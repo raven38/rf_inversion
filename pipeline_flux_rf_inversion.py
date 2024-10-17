@@ -577,7 +577,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
 
         for i in range(N - 1):
             t_i = i / N
-            print(t_i, t_i + 1/ N)
+
             # get the unconditional vector field
             u_t_i = self.transformer(
                 hidden_states=Y_t, 
