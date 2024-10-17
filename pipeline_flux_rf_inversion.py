@@ -883,8 +883,10 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 if start_timestep <= i < stop_timestep:
                     # controlled vector field
                     v_hat_t = v_t + eta * (v_t_cond - v_t)
+                    print('controlled')
                 else:
                     v_hat_t = v_t
+                    print('no control')
 
                 # compute the previous noisy sample x_t -> x_t-1
                 latents_dtype = latents.dtype
