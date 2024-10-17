@@ -579,6 +579,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         Y_t = image_latents.clone()
         y_1 = torch.randn_like(Y_t)
         N = len(sigmas)
+        guidance = guidance.expand(batch_size)
 
         for i, t in enumerate(timesteps):
             t_i = 1 - t / 1000
@@ -845,7 +846,6 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         # handle guidance
         if self.transformer.config.guidance_embeds:
             guidance = torch.full([1], guidance_scale, device=device, dtype=torch.float32)
-            guidance = guidance.expand(latents.shape[0])
         else:
             guidance = None
 
@@ -872,7 +872,12 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         num_warmup_steps = max(len(timesteps) - num_inference_steps * self.scheduler.order, 0)
         self._num_timesteps = len(timesteps)
 
-
+        # handle guidance
+        if self.transformer.config.guidance_embeds:
+            guidance = torch.full([1], guidance_scale, device=device, dtype=torch.float32)
+            guidance = guidance.expand(latents.shape[0])
+        else:
+            guidance = None
 
         # 6. Denoising loop
         with self.progress_bar(total=num_inference_steps) as progress_bar:
