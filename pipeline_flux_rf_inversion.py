@@ -555,14 +555,14 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         else:
             image_latents = torch.cat([image_latents], dim=0)
         noise = randn_tensor(shape, generator=generator, device=device, dtype=dtype)
-        latents = noise
+        # latents = noise
         # latents = self.scheduler.scale_noise(image_latents, timestep, noise)        
-        latents = self._pack_latents(latents, batch_size, num_channels_latents, height, width)
-        image_latents = self._pack_latents(image_latents, batch_size, num_channels_latents, height, width)
-        # print((latents - image_latents).abs().mean())
+        # latents = self._pack_latents(latents, batch_size, num_channels_latents, height, width)
         # image_latents = self._pack_latents(image_latents, batch_size, num_channels_latents, height, width)
+        # print((latents - image_latents).abs().mean())
+        image_latents = self._pack_latents(image_latents, batch_size, num_channels_latents, height, width)
         ori_image_latents = image_latents.clone()
-        # latents = self.controlled_forward_ode(image_latents, latent_image_ids, sigmas, gamma=gamma, null_prompt_embeds=null_prompt_embeds, null_pooled_prompt_embeds=null_pooled_prompt_embeds, null_text_ids=null_text_ids)
+        latents = self.controlled_forward_ode(image_latents, latent_image_ids, sigmas, gamma=gamma, null_prompt_embeds=null_prompt_embeds, null_pooled_prompt_embeds=null_pooled_prompt_embeds, null_text_ids=null_text_ids)
         print((latents - ori_image_latents).abs().mean())        
         return ori_image_latents, latents, latent_image_ids
     
@@ -593,7 +593,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
 
             # get the conditional vector field
             u_t_i_cond = (y_1 - Y_t) / (1 - t_i)
-
+            print((y_1 - Y_t).abs().mean())        
             # controlled vector field
             u_hat_t_i = u_t_i + gamma * (u_t_i_cond - u_t_i)
 
