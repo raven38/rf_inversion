@@ -881,7 +881,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
 
                 v_t_cond = (y_0 - latents) / (1 - t_i)
                 eta_t = eta if start_timestep <= i < stop_timestep else 0.0
-                if True or start_timestep <= i < stop_timestep:
+                if False and start_timestep <= i < stop_timestep:
                 #     # controlled vector field
                 #     # v_hat_t = v_t + eta * (v_t_cond - v_t)
                     v_hat_t = ((1 - t_i - eta_t) * latents  + eta_t * t_i * y_0) / (t_i*(1 - t_i)) + 2*(1-t_i)*(1 - eta_t) /t_i * v_t
