@@ -555,14 +555,14 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         else:
             image_latents = torch.cat([image_latents], dim=0)
         noise = randn_tensor(shape, generator=generator, device=device, dtype=dtype)
-        # latents = self.scheduler.scale_noise(image_latents, timestep, noise)        
-        # latents = self._pack_latents(latents, batch_size, num_channels_latents, height, width)
-        # image_latents = self._pack_latents(image_latents, batch_size, num_channels_latents, height, width)
-
+        latents = self.scheduler.scale_noise(image_latents, timestep, noise)        
+        latents = self._pack_latents(latents, batch_size, num_channels_latents, height, width)
+        image_latents = self._pack_latents(image_latents, batch_size, num_channels_latents, height, width)
+        print((latents - image_latents).abs().mean())
         image_latents = self._pack_latents(image_latents, batch_size, num_channels_latents, height, width)
         ori_image_latents = image_latents.clone()
         latents = self.controlled_forward_ode(image_latents, latent_image_ids, sigmas, gamma=gamma, null_prompt_embeds=null_prompt_embeds, null_pooled_prompt_embeds=null_pooled_prompt_embeds, null_text_ids=null_text_ids)
-        
+        print((latents - ori_image_latents).abs().mean())        
         return ori_image_latents, latents, latent_image_ids
     
     def controlled_forward_ode(self, image_latents, latent_image_ids, sigmas, gamma, null_prompt_embeds, null_pooled_prompt_embeds, null_text_ids):
@@ -868,7 +868,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 timestep = t.expand(latents.shape[0]).to(latents.dtype)
                 v_t = -self.transformer(
                     hidden_states=latents,
-                    timestep=torch.tensor(1 - t_i - 1 / len(timesteps), dtype=latents.dtype, device=device).repeat(len(latents)),
+                    timestep=timestep / 1000,
                     guidance=guidance,
                     pooled_projections=pooled_prompt_embeds,
                     encoder_hidden_states=prompt_embeds,
