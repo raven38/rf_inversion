@@ -598,7 +598,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             u_hat_t_i = u_t_i + gamma * (u_t_i_cond - u_t_i)
 
             # update Y_t
-            Y_t = Y_t + u_hat_t_i * (sigmas[i+1] - sigmas[i])
+            Y_t = Y_t + u_hat_t_i * (sigmas[i] - sigmas[i + 1])
 
         return Y_t
 
