@@ -4,6 +4,8 @@ from pipeline_flux_rf_inversion import FluxRFInversionPipeline
 from diffusers import FluxImg2ImgPipeline
 from diffusers.utils import load_image
 
+from PIL import Image
+
 def main():
     parser = argparse.ArgumentParser(description="Run Flux RF Inversion Pipeline")
     parser.add_argument("--model", type=str, default="black-forest-labs/FLUX.1-schnell", help="Model name or path")
@@ -31,7 +33,10 @@ def main():
     
     pipe = pipe.to(device)
 
-    init_image = load_image(args.image).resize((1024, 1024))
+    if image_path_or_url.startswith('http://') or image_path_or_url.startswith('https://'):
+        init_image = load_image(args.image).resize((1024, 1024))
+    else:
+        init_image = Image.open(args.image).resize((1024, 1024))
     
     prompt_2 = args.prompt_2 if args.prompt_2 else args.prompt
 
