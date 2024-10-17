@@ -576,12 +576,12 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         N = len(sigmas)
 
         for i in range(N - 1):
-            t_i = torch.tensor(i / N, dtype=Y_t.dtype, device=device).repeat(batch_size)
+            t_i = i / N
 
             # get the unconditional vector field
             u_t_i = self.transformer(
                 hidden_states=Y_t, 
-                timestep=t_i, 
+                timestep=torch.tensor(t_i, dtype=Y_t.dtype, device=device).repeat(batch_size), 
                 pooled_projections=null_pooled_prompt_embeds,
                 encoder_hidden_states=null_prompt_embeds,
                 txt_ids=null_text_ids,
@@ -868,7 +868,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 timestep = t.expand(latents.shape[0]).to(latents.dtype)
                 v_t = -self.transformer(
                     hidden_states=latents,
-                    timestep=t_i,
+                    timestep=torch.tensor(t_i, dtype=Y_t.dtype, device=device).repeat(batch_size),
                     guidance=guidance,
                     pooled_projections=pooled_prompt_embeds,
                     encoder_hidden_states=prompt_embeds,
