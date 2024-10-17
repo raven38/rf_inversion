@@ -880,16 +880,14 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 )[0]
 
                 v_t_cond = (y_0 - latents) / (1 - t_i)
-
-                if start_timestep <= i < stop_timestep:
-                    # controlled vector field
-                    # v_hat_t = v_t + eta * (v_t_cond - v_t)
-
-                    # SDE Eq: 17
-                    v_hat_t = ((1 - t_i - eta) * latents  + eta * t_i * y_0) / (t_i*(1 - t_i)) + 2*(1-t_i)*(1 - eta) /t_i * v_t
-                else:
-                    v_hat_t = v_t
-
+                eta_t = eta if start_timestep <= i < stop_timestep else 0.0
+                # if start_timestep <= i < stop_timestep:
+                #     # controlled vector field
+                #     # v_hat_t = v_t + eta * (v_t_cond - v_t)
+                # else:
+                #     v_hat_t = v_t
+                # SDE Eq: 17
+                v_hat_t = ((1 - t_i - eta_t) * latents  + eta_t * t_i * y_0) / (t_i*(1 - t_i)) + 2*(1-t_i)*(1 - eta_t) /t_i * v_t
                 # compute the previous noisy sample x_t -> x_t-1
                 latents_dtype = latents.dtype
 
