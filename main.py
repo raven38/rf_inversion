@@ -33,7 +33,7 @@ def main():
     
     pipe = pipe.to(device)
 
-    if image_path_or_url.startswith('http://') or image_path_or_url.startswith('https://'):
+    if args.image.startswith('http://') or args.image.startswith('https://'):
         init_image = load_image(args.image).resize((1024, 1024))
     else:
         init_image = Image.open(args.image).resize((1024, 1024))
