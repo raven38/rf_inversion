@@ -579,7 +579,8 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         Y_t = image_latents.clone()
         y_1 = torch.randn_like(Y_t)
         N = len(sigmas)
-        guidance = guidance.expand(batch_size)
+        if guidance is not None:
+            guidance = guidance.expand(batch_size)
 
         for i, t in enumerate(timesteps):
             t_i = 1 - t / 1000
