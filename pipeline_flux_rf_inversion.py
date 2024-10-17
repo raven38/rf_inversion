@@ -594,6 +594,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             u_t_i_cond = (y_1 - Y_t) / (1 - t_i)
 
             # controlled vector field
+            # Eq 8 dY_t = [u_t(Y_t) + γ(u_t(Y_t|y_1) - u_t(Y_t))]dt
             u_hat_t_i = u_t_i + gamma * (u_t_i_cond - u_t_i)
 
             # update Y_t
@@ -860,7 +861,8 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         with self.progress_bar(total=num_inference_steps) as progress_bar:
             y_0 = ori_latents.clone()
             for i, t in enumerate(timesteps):
-                t_i = i / len(timesteps)
+                t_i = 1 - (i / (len(timesteps) - 1))
+                dt = 1 / (len(timesteps) - 1)
                 if self.interrupt:
                     continue
                 # broadcast to batch dimension in a way that's compatible with ONNX/Core ML
@@ -881,14 +883,21 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
 
                 if start_timestep <= i < stop_timestep:
                     # controlled vector field
-                    v_hat_t = v_t + eta * (v_t_cond - v_t)
+                    # v_hat_t = v_t + eta * (v_t_cond - v_t)
+
+                    # SDE Eq: 17
+                    v_hat_t = ((1 - t_i - eta) * latents  + eta * t_i * y_0) / (t_i*(1 - t_i)) + 2*(1-t_i)*(1 - eta) /t_i * v_t
                 else:
                     v_hat_t = v_t
 
                 # compute the previous noisy sample x_t -> x_t-1
                 latents_dtype = latents.dtype
 
-                latents = latents + v_hat_t * (sigmas[i] - sigmas[i+1])
+                diffusion = torch.sqrt(2 * (1-t) * (1-eta) / t)
+                noise = torch.randn_like(latents)
+
+                # latents = latents + v_hat_t * (sigmas[i] - sigmas[i+1])
+                latents = latents + v_hat_t * dt + diffusion * torch.sqrt(dt) * noise
                 # latents = self.scheduler.step(v_t, t, latents, return_dict=False)[0]
 
                 if latents.dtype != latents_dtype:
