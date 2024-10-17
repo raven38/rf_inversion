@@ -887,15 +887,15 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 # else:
                 #     v_hat_t = v_t
                 # SDE Eq: 17
-                print(t_i, timestep / 1000, dt, eta_t, v_t.mean(), latents.mean())
                 v_hat_t = ((1 - t_i - eta_t) * latents  + eta_t * t_i * y_0) / (t_i*(1 - t_i)) + 2*(1-t_i)*(1 - eta_t) /t_i * v_t
                 # compute the previous noisy sample x_t -> x_t-1
                 latents_dtype = latents.dtype
 
-                diffusion = torch.sqrt(2 * (1-t_i) * (1-eta) / t_i)
+                diffusion = torch.sqrt(2 * (1-t_i) * (1-eta_t) / t_i)
                 noise = torch.randn_like(latents)
 
                 # latents = latents + v_hat_t * (sigmas[i] - sigmas[i+1])
+                print(t_i, timestep / 1000, dt, eta_t, v_t.mean(), latents.mean(), v_hat_t.mean(), diffusion.mean(), noise.mean())
                 latents = latents + v_hat_t * dt + diffusion * torch.sqrt(dt) * noise
                 # latents = self.scheduler.step(v_t, t, latents, return_dict=False)[0]
 
