@@ -592,22 +592,22 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             )[0]
 
             # get the conditional vector field
-            # u_t_i_cond = (y_1 - Y_t) / (1 - t_i)
+            u_t_i_cond = (y_1 - Y_t) / (1 - t_i)
 
             # controlled vector field
             # Eq 8 dY_t = [u_t(Y_t) + γ(u_t(Y_t|y_1) - u_t(Y_t))]dt
-            # u_hat_t_i = u_t_i + gamma * (u_t_i_cond - u_t_i)
+            u_hat_t_i = u_t_i + gamma * (u_t_i_cond - u_t_i)
 
             # SDE Eq: 10
-            u_hat_t_i = - 1 / (1 - t_i) * (Y_t - gamma * y_1)
+            # u_hat_t_i = - 1 / (1 - t_i) * (Y_t - gamma * y_1)
 
-            diffusion = torch.sqrt(2 * (1 - gamma)* t_i / (1 - t_i))
-            noise = torch.randn_like(Y_t)
-            print((u_hat_t_i * dt).mean(), (torch.sqrt(dt) * diffusion * noise).mean())
-            Y_t = Y_t + u_hat_t_i * dt +  torch.sqrt(dt) * diffusion * noise 
-            print((Y_t - image_latents).abs().mean())
+            # diffusion = torch.sqrt(2 * (1 - gamma)* t_i / (1 - t_i))
+            # noise = torch.randn_like(Y_t)
+            # print((u_hat_t_i * dt).mean(), (torch.sqrt(dt) * diffusion * noise).mean())
+            # Y_t = Y_t + u_hat_t_i * dt +  torch.sqrt(dt) * diffusion * noise 
+            # print((Y_t - image_latents).abs().mean())
             # update Y_t
-            # Y_t = Y_t + u_hat_t_i * (sigmas[i] - sigmas[i + 1])
+            Y_t = Y_t + u_hat_t_i * (sigmas[i] - sigmas[i + 1])
 
         return Y_t
 
