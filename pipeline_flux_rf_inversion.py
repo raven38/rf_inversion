@@ -881,7 +881,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
 
                 v_t_cond = (y_0 - latents) / (1 - t_i)
                 eta_t = eta if start_timestep <= i < stop_timestep else 0.0
-                if start_timestep <= i < stop_timestep:
+                if True or start_timestep <= i < stop_timestep:
                 #     # controlled vector field
                 #     # v_hat_t = v_t + eta * (v_t_cond - v_t)
                     v_hat_t = ((1 - t_i - eta_t) * latents  + eta_t * t_i * y_0) / (t_i*(1 - t_i)) + 2*(1-t_i)*(1 - eta_t) /t_i * v_t
@@ -898,7 +898,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
 
                 # latents = latents + v_hat_t * (sigmas[i] - sigmas[i+1])
                 print(t_i, timestep / 1000, dt, eta_t, v_t.mean().item(), latents.mean().item(), v_hat_t.mean().item(), diffusion.mean().item(), noise.mean().item())
-                if start_timestep <= i < stop_timestep:
+                if True or start_timestep <= i < stop_timestep:
                     latents = latents + v_hat_t * dt + diffusion * torch.sqrt(dt) * noise
                 else:
                     latents = latents + v_hat_t * dt
