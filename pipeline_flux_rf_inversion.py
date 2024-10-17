@@ -893,7 +893,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 # compute the previous noisy sample x_t -> x_t-1
                 latents_dtype = latents.dtype
 
-                diffusion = torch.sqrt(2 * (1-t_i) * (1-eta_t) / t_i)
+                diffusion = torch.sqrt(2 * (1-t_i) * (1-eta) / t_i)
                 noise = torch.randn_like(latents)
 
                 # latents = latents + v_hat_t * (sigmas[i] - sigmas[i+1])
