@@ -555,7 +555,8 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         else:
             image_latents = torch.cat([image_latents], dim=0)
         noise = randn_tensor(shape, generator=generator, device=device, dtype=dtype)
-        latents = self.scheduler.scale_noise(image_latents, timestep, noise)        
+        latents = noise
+        # latents = self.scheduler.scale_noise(image_latents, timestep, noise)        
         latents = self._pack_latents(latents, batch_size, num_channels_latents, height, width)
         image_latents = self._pack_latents(image_latents, batch_size, num_channels_latents, height, width)
         print((latents - image_latents).abs().mean())
