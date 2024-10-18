@@ -1,4 +1,9 @@
 # rf_inversion
+
+This repository is unofficial implementation of RF Inversion, "Semantic Image Inversion and Editing using
+Stochastic Rectified Differential Equations".
+https://rf-inversion.github.io/ 
+
 ``` コマンド例
 python main.py --image examples/man.jpg --prompt "A portrait of a man wearing glasses" --output outputs/man_glasses_eta09_s6e20.jpg --eta 0.9 --start_timestep 6 --stop_timestep 20 
 ```
