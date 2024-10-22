@@ -612,9 +612,9 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             # noise = torch.randn_like(Y_t)
             # print((u_hat_t_i * dt).mean(), (torch.sqrt(dt) * diffusion * noise).mean())
             # Y_t = Y_t + u_hat_t_i * dt +  torch.sqrt(dt) * diffusion * noise 
-            # print((Y_t - image_latents).abs().mean())
+            print((Y_t - image_latents).abs().mean())
             # update Y_t
-            Y_t = Y_t + u_hat_t_i * (sigmas[i] - sigmas[i + 1])
+            Y_t = Y_t + u_hat_t_i * (sigmas[i + 1] - sigmas[i])
 
         return Y_t
 
