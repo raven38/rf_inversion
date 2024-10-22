@@ -21,6 +21,7 @@ def main():
     parser.add_argument("--stop_timestep", type=int, default=6, help="Stop timestep")
     parser.add_argument("--output", type=str, default="output.jpg", help="Output image filename")
     parser.add_argument("--use_img2img", action="store_true", help="Use FluxImg2ImgPipeline instead of RF Inversion")
+    parser.add_argument("--num_images", type=int, default=1, help="Number of images to generate")
 
     args = parser.parse_args()
 
@@ -40,21 +41,25 @@ def main():
     
     prompt_2 = args.prompt_2 if args.prompt_2 else args.prompt
 
-    images = pipe(
-        prompt=args.prompt,
-        prompt_2=prompt_2,
-        image=init_image,
-        num_inference_steps=args.num_inference_steps,
-        strength=args.strength,
-        guidance_scale=args.guidance_scale,
-        gamma=args.gamma,
-        eta=args.eta,
-        start_timestep=args.start_timestep,
-        stop_timestep=args.stop_timestep,
-    ).images[0]
+    # split basename and extension
+    save_base, ext = args.output.rsplit(".", 1)
 
-    images.save(args.output)
-    print(f"Output image saved as {args.output}")
+    for i in range(args.num_images):
+        images = pipe(
+            prompt=args.prompt,
+            prompt_2=prompt_2,
+            image=init_image,
+            num_inference_steps=args.num_inference_steps,
+            strength=args.strength,
+            guidance_scale=args.guidance_scale,
+            gamma=args.gamma,
+            eta=args.eta,
+            start_timestep=args.start_timestep,
+            stop_timestep=args.stop_timestep,
+        ).images[0]
+
+        images.save(f"{save_base}_{i}.{ext}")
+        print(f"Output image saved as {save_base}_{i}.{ext}")
 
 if __name__ == "__main__":
     main()
