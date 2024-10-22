@@ -581,9 +581,8 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         N = len(sigmas)
         if guidance is not None:
             guidance = guidance.expand(batch_size)
-
+        
         for i, t in enumerate(timesteps):
-            continue
             t_i = 1 - t / 1000
             dt = torch.tensor(1 / (N-1), dtype=Y_t.dtype, device=device)
             # get the unconditional vector field
@@ -934,7 +933,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 deubg_latents = (debug_latents / self.vae.config.scaling_factor) + self.vae.config.shift_factor
                 debug_image = self.vae.decode(debug_latents, return_dict=False)[0]
                 debug_image = self.image_processor.postprocess(debug_image, output_type=output_type)
-                debug_image.save(f"debug_{i}.png")
+                debug_image[0].save(f"debug_{i}.png")
 
                 if latents.dtype != latents_dtype:
                     if torch.backends.mps.is_available():
