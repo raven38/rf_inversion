@@ -928,7 +928,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 #    latents = latents + v_hat_t * dt + diffusion * torch.sqrt(dt) * noise
                 # else:
                 #    latents = latents + v_hat_t * dt
-
+                print(sigmas, self.scheduler.sigmas)
                 latents = self.scheduler.step(v_hat_t, t, latents, return_dict=False)[0]
 
                 # debug print save image 
