@@ -921,14 +921,14 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 # diffusion = torch.sqrt(2 * (1-t_i) * (1-eta) / t_i)
                 # noise = torch.randn_like(latents)
 
-                latents = latents + v_hat_t * (self.scheduler.sigmas[i] -  self.scheduler.sigmas[i + 1])
+                # latents = latents + v_hat_t * (self.scheduler.sigmas[i] -  self.scheduler.sigmas[i + 1])
                 # print(t_i, timestep / 1000, dt, eta_t, v_t.mean().item(), latents.mean().item(), v_hat_t.mean().item(), diffusion.mean().item(), noise.mean().item())
                 # if start_timestep <= i < stop_timestep:
                 #    latents = latents + v_hat_t * dt + diffusion * torch.sqrt(dt) * noise
                 # else:
                 #    latents = latents + v_hat_t * dt
                 # print(sigmas, self.scheduler.sigmas)
-                # latents = self.scheduler.step(v_hat_t, t, latents, return_dict=False)[0]
+                latents = self.scheduler.step(v_hat_t, t, latents, return_dict=False)[0]
 
                 # debug print save image 
                 # debug_latents = self._unpack_latents(latents, height, width, self.vae_scale_factor)
