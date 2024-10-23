@@ -814,6 +814,9 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             max_sequence_length=max_sequence_length,
             lora_scale=lora_scale,
         )
+        null_prompt_embeds = prompt_embeds
+        null_pooled_prompt_embeds = pooled_prompt_embeds
+        null_text_ids = text_ids
 
         # 4.Prepare timesteps
         sigmas = np.linspace(1.0, 1 / num_inference_steps, num_inference_steps)
