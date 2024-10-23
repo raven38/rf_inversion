@@ -584,7 +584,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             guidance = guidance.expand(batch_size)
         
         print(timesteps, self.scheduler.sigmas, self.scheduler.timesteps)
-        for i, t in enumerate(reversed(timesteps)):
+        for i, t in enumerate(timesteps):
             t_i = t / 1000
             print(t_i, t)
             dt = torch.tensor(1 / (N-1), dtype=Y_t.dtype, device=device)
@@ -618,7 +618,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             # Y_t = Y_t + u_hat_t_i * dt +  torch.sqrt(dt) * diffusion * noise 
 
             # update Y_t
-            Y_t = Y_t + u_hat_t_i * (reversed(sigmas)[i+1] - reversed(sigmas)[i])
+            Y_t = Y_t + u_hat_t_i * (sigmas[i+1] - sigmas[i])
 
         return Y_t
 
