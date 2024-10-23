@@ -45,6 +45,7 @@ def main():
     save_base, ext = args.output.rsplit(".", 1)
 
     for i in range(args.num_images):
+        kwargs = {"gamma": args.gamma, "eta": args.eta, "start_timestep": args.start_timestep, "stop_timestep": args.stop_timestep} if args.use_img2img else dict({})
         images = pipe(
             prompt=args.prompt,
             prompt_2=prompt_2,
@@ -52,10 +53,7 @@ def main():
             num_inference_steps=args.num_inference_steps,
             strength=args.strength,
             guidance_scale=args.guidance_scale,
-            gamma=args.gamma,
-            eta=args.eta,
-            start_timestep=args.start_timestep,
-            stop_timestep=args.stop_timestep,
+            **kwargs,
         ).images[0]
 
         images.save(f"{save_base}_{i}.{ext}")
