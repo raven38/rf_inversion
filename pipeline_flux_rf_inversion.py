@@ -890,7 +890,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         with self.progress_bar(total=num_inference_steps) as progress_bar:
             y_0 = ori_latents.clone()
             for i, t in enumerate(self.scheduler.timesteps[1:]):
-                t_i = 1 - t / 1000 # torch.tensor(1 - ((i+1) / (len(timesteps))), device=device)
+                t_i = t / 1000 # torch.tensor(1 - ((i+1) / (len(timesteps))), device=device)
                 print(t)
                 dt = torch.tensor(1 / (len(timesteps) - 1), device=device)
                 if self.interrupt:
