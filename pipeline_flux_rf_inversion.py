@@ -583,10 +583,10 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         if guidance is not None:
             guidance = guidance.expand(batch_size)
         
-        print(timesteps, self.scheduler.sigmas, self.scheduler.timesteps)
+        # print(timesteps, self.scheduler.sigmas, self.scheduler.timesteps)
         for i in range(N-1): # enumerate(timesteps):
             t_i = torch.tensor(i / (N), dtype=Y_t.dtype, device=device)
-            print(t_i)
+            # print(t_i)
             dt = torch.tensor(1 / (N), dtype=Y_t.dtype, device=device)
             # get the unconditional vector field
 
@@ -622,11 +622,11 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             Y_t = Y_t + u_hat_t_i * dt # (sigmas[i] - sigmas[i+1])
 
             # debug print save image 
-            debug_latents = self._unpack_latents(Y_t, height * self.vae_scale_factor // 2, width * self.vae_scale_factor // 2, self.vae_scale_factor)
-            debug_latents = (debug_latents / self.vae.config.scaling_factor) + self.vae.config.shift_factor
-            debug_image = self.vae.decode(debug_latents, return_dict=False)[0]
-            debug_image = self.image_processor.postprocess(debug_image, output_type='pil')
-            debug_image[0].save(f"debug/forward_{i}.png")
+            # debug_latents = self._unpack_latents(Y_t, height * self.vae_scale_factor // 2, width * self.vae_scale_factor // 2, self.vae_scale_factor)
+            # debug_latents = (debug_latents / self.vae.config.scaling_factor) + self.vae.config.shift_factor
+            # debug_image = self.vae.decode(debug_latents, return_dict=False)[0]
+            # debug_image = self.image_processor.postprocess(debug_image, output_type='pil')
+            # debug_image[0].save(f"debug/forward_{i}.png")
 
         return Y_t
 
@@ -900,7 +900,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             y_0 = ori_latents.clone()
             for i, t in enumerate(timesteps):
                 t_i = 1 - t / 1000 # torch.tensor((i+1) / (len(timesteps)-1), device=device)
-                print(t_i, t)
+                # print(t_i, t)
                 dt = torch.tensor(1 / (len(timesteps) - 1), device=device)
                 if self.interrupt:
                     continue
@@ -945,11 +945,11 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 # latents = self.scheduler.step(v_hat_t, t, latents, return_dict=False)[0]
 
                 # debug print save image 
-                debug_latents = self._unpack_latents(latents, height, width, self.vae_scale_factor)
-                debug_latents = (debug_latents / self.vae.config.scaling_factor) + self.vae.config.shift_factor
-                debug_image = self.vae.decode(debug_latents, return_dict=False)[0]
-                debug_image = self.image_processor.postprocess(debug_image, output_type=output_type)
-                debug_image[0].save(f"debug/{i}.png")
+                # debug_latents = self._unpack_latents(latents, height, width, self.vae_scale_factor)
+                # debug_latents = (debug_latents / self.vae.config.scaling_factor) + self.vae.config.shift_factor
+                # debug_image = self.vae.decode(debug_latents, return_dict=False)[0]
+                # debug_image = self.image_processor.postprocess(debug_image, output_type=output_type)
+                # debug_image[0].save(f"debug/{i}.png")
 
                 if latents.dtype != latents_dtype:
                     if torch.backends.mps.is_available():
