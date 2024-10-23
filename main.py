@@ -45,7 +45,7 @@ def main():
     save_base, ext = args.output.rsplit(".", 1)
 
     for i in range(args.num_images):
-        kwargs = {"gamma": args.gamma, "eta": args.eta, "start_timestep": args.start_timestep, "stop_timestep": args.stop_timestep} if args.use_img2img else dict({})
+        kwargs = {"gamma": args.gamma, "eta": args.eta, "start_timestep": args.start_timestep, "stop_timestep": args.stop_timestep} if not args.use_img2img else dict({})
         images = pipe(
             prompt=args.prompt,
             prompt_2=prompt_2,
