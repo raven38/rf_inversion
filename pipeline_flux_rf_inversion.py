@@ -814,9 +814,6 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             max_sequence_length=max_sequence_length,
             lora_scale=lora_scale,
         )
-        null_prompt_embeds = prompt_embeds
-        null_pooled_prompt_embeds = pooled_prompt_embeds
-        null_text_ids = text_ids
 
         # 4.Prepare timesteps
         sigmas = np.linspace(1.0, 1 / num_inference_steps, num_inference_steps)
@@ -894,7 +891,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                     continue
                 # broadcast to batch dimension in a way that's compatible with ONNX/Core ML
                 timestep = t.expand(latents.shape[0]).to(latents.dtype)
-                v_t = -self.transformer(
+                v_t = self.transformer(
                     hidden_states=latents,
                     timestep=timestep / 1000,
                     guidance=guidance,
@@ -923,14 +920,14 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 # diffusion = torch.sqrt(2 * (1-t_i) * (1-eta) / t_i)
                 # noise = torch.randn_like(latents)
 
-                latents = latents + v_hat_t * (sigmas[i] - sigmas[i + 1])
+                # latents = latents + v_hat_t * (sigmas[i] - sigmas[i + 1])
                 # print(t_i, timestep / 1000, dt, eta_t, v_t.mean().item(), latents.mean().item(), v_hat_t.mean().item(), diffusion.mean().item(), noise.mean().item())
                 # if start_timestep <= i < stop_timestep:
                 #    latents = latents + v_hat_t * dt + diffusion * torch.sqrt(dt) * noise
                 # else:
                 #    latents = latents + v_hat_t * dt
 
-                # latents = self.scheduler.step(v_t, t, latents, return_dict=False)[0]
+                latents = self.scheduler.step(v_t, t, latents, return_dict=False)[0]
 
                 # debug print save image 
                 # debug_latents = self._unpack_latents(latents, height, width, self.vae_scale_factor)
