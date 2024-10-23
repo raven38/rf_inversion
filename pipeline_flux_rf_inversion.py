@@ -899,7 +899,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         with self.progress_bar(total=num_inference_steps) as progress_bar:
             y_0 = ori_latents.clone()
             for i, t in enumerate(timesteps):
-                t_i = torch.tensor((i+1) / (len(timesteps)-1), device=device)
+                t_i = 1 - t / 1000 # torch.tensor((i+1) / (len(timesteps)-1), device=device)
                 print(t_i, t)
                 dt = torch.tensor(1 / (len(timesteps) - 1), device=device)
                 if self.interrupt:
@@ -908,7 +908,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 timestep = t.expand(latents.shape[0]).to(latents.dtype)
                 v_t =  -self.transformer(
                     hidden_states=latents,
-                    timestep=(1 - t_i).expand(latents.shape[0]),
+                    timestep=t / 1000,
                     guidance=guidance,
                     pooled_projections=pooled_prompt_embeds,
                     encoder_hidden_states=prompt_embeds,
@@ -922,8 +922,8 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 eta_t = eta if start_timestep <= i < stop_timestep else 0.0
                 if start_timestep <= i < stop_timestep:
                     # controlled vector field
-                    # v_hat_t = v_t + eta * (v_t_cond - v_t)
-                    v_hat_t = ((1 - t_i - eta_t) * latents  + eta_t * t_i * y_0) / (t_i*(1 - t_i)) + 2*(1-t_i)*(1 - eta_t) /t_i * v_t
+                    v_hat_t = v_t + eta * (v_t_cond - v_t)
+                    # v_hat_t = ((1 - t_i - eta_t) * latents  + eta_t * t_i * y_0) / (t_i*(1 - t_i)) + 2*(1-t_i)*(1 - eta_t) /t_i * v_t
                     # print((((1 - t_i - eta_t) * latents  + eta_t * t_i * y_0) / (t_i*(1 - t_i))).mean(),  (2*(1-t_i)*(1 - eta_t) /t_i * v_t).mean())
                 else:
                     v_hat_t = v_t
@@ -932,15 +932,15 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 # compute the previous noisy sample x_t -> x_t-1
                 latents_dtype = latents.dtype
 
-                diffusion = torch.sqrt(2 * (1-t_i) * (1-eta) / t_i)
-                noise = torch.randn_like(latents)
+                # diffusion = torch.sqrt(2 * (1-t_i) * (1-eta) / t_i)
+                # noise = torch.randn_like(latents)
 
-                # latents = latents + v_hat_t * (sigmas[i] -  sigmas[i + 1])
+                latents = latents + v_hat_t * (sigmas[i] -  sigmas[i + 1])
                 # print(t_i, timestep / 1000, dt, eta_t, v_t.mean().item(), latents.mean().item(), v_hat_t.mean().item(), diffusion.mean().item(), noise.mean().item())
-                if start_timestep <= i < stop_timestep:
-                   latents = latents + v_hat_t * dt + diffusion * torch.sqrt(dt) * noise
-                else:
-                   latents = latents + v_hat_t * dt
+                # if start_timestep <= i < stop_timestep:
+                #    latents = latents + v_hat_t * dt + diffusion * torch.sqrt(dt) * noise
+                # else:
+                #    latents = latents + v_hat_t * dt
                 # print(sigmas, self.scheduler.sigmas)
                 # latents = self.scheduler.step(v_hat_t, t, latents, return_dict=False)[0]
 
