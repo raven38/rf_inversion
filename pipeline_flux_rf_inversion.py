@@ -618,15 +618,16 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             # print((u_hat_t_i * dt).mean(), (torch.sqrt(dt) * diffusion * noise).mean())
             Y_t = Y_t + u_hat_t_i * dt +  torch.sqrt(dt) * diffusion * noise
 
-                # debug print save image 
+            # update Y_t
+            # Y_t = Y_t + u_hat_t_i * (sigmas[i] - sigmas[i+1])
+
+            # debug print save image 
+            print(height, width, self.vae_scale_factor)
             debug_latents = self._unpack_latents(Y_t, height, width, self.vae_scale_factor)
             debug_latents = (debug_latents / self.vae.config.scaling_factor) + self.vae.config.shift_factor
             debug_image = self.vae.decode(debug_latents, return_dict=False)[0]
             debug_image = self.image_processor.postprocess(debug_image, output_type='pil')
-            debug_image[0].save(f"debug/forward_{i}.png")           
-
-            # update Y_t
-            # Y_t = Y_t + u_hat_t_i * (sigmas[i] - sigmas[i+1])
+            debug_image[0].save(f"debug/forward_{i}.png")
 
         return Y_t
 
