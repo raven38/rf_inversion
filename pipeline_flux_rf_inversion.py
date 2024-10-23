@@ -585,7 +585,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         
         print(timesteps, self.scheduler.sigmas, self.scheduler.timesteps)
         for i, t in enumerate(timesteps):
-            t_i = i / (N-1)
+            t_i = torch.tensor(i / (N-1), dtype=Y_t.dtype, device=device)
             print(t_i, t)
             dt = torch.tensor(1 / (N-1), dtype=Y_t.dtype, device=device)
             # get the unconditional vector field
