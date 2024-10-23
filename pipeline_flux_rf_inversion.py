@@ -908,7 +908,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 timestep = t.expand(latents.shape[0]).to(latents.dtype)
                 v_t =  -self.transformer(
                     hidden_states=latents,
-                    timestep=1 - t_i,
+                    timestep=(1 - t_i).expand(latents.shape[0]),
                     guidance=guidance,
                     pooled_projections=pooled_prompt_embeds,
                     encoder_hidden_states=prompt_embeds,
