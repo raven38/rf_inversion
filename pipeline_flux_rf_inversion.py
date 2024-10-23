@@ -616,7 +616,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             print((Y_t - y_1).abs().mean()) 
             # update Y_t
 
-            Y_t = Y_t + u_hat_t_i * (self.scheduler.sigmas[i + 1] - self.scheduler.sigmas[i])
+            Y_t = Y_t + u_hat_t_i * (self.scheduler.sigmas[i] - self.scheduler.sigmas[i + 1])
 
         return Y_t
 
