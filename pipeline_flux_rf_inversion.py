@@ -582,8 +582,8 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         if guidance is not None:
             guidance = guidance.expand(batch_size)
         
-        for i, t in enumerate(timesteps):
-            t_i = 1 - t / 1000
+        for i, t in enumerate(N - 1):
+            t_i = i / N # 1 - t / 1000
             dt = torch.tensor(1 / (N-1), dtype=Y_t.dtype, device=device)
             # get the unconditional vector field
 
@@ -615,6 +615,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             # Y_t = Y_t + u_hat_t_i * dt +  torch.sqrt(dt) * diffusion * noise 
 
             # update Y_t
+
             Y_t = Y_t + u_hat_t_i * (self.scheduler.sigmas[i] - self.scheduler.sigmas[i + 1])
 
         return Y_t
