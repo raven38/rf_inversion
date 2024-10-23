@@ -38,7 +38,8 @@ start_timestepとstop_timestepはetaを有効にするtimestepで
 
 <img src="img/cat_origami_cat_eta08_s0e5_dev.jpg" alt="Cat Origami" width="300px">
 
-
+```python main.py --image examples/cat.jpg --prompt "tiger" --num_images 1 --output outputs/cat_tiger_gamma05_eta09_s0e7_st095_dev.jpg --eta 0.9 --gamma 0.5 --start_timestep 0 --stop_timestep 7 --model black-forest-labs/FLUX.1-dev```
+<img src="img/cat_tiger_gamma05_eta09_s0e7.jpg" alt="Cat Tiger" width="300px">
 
 ## 結果
 <img src="examples/cat.jpg" alt="Cat" width="300px">
