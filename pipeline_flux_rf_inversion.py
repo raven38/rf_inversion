@@ -889,9 +889,9 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         # 6. Denoising loop
         with self.progress_bar(total=num_inference_steps) as progress_bar:
             y_0 = ori_latents.clone()
-            for i, t in enumerate(self.scheduler.timesteps[1:]):
+            for i, t in enumerate(self.scheduler.timesteps[2:]):
                 t_i = t / 1000 # torch.tensor(1 - ((i+1) / (len(timesteps))), device=device)
-                print(t)
+                print(t_i)
                 dt = torch.tensor(1 / (len(timesteps) - 1), device=device)
                 if self.interrupt:
                     continue
