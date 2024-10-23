@@ -607,19 +607,19 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
 
             # controlled vector field
             # Eq 8 dY_t = [u_t(Y_t) + γ(u_t(Y_t|y_1) - u_t(Y_t))]dt
-            # u_hat_t_i = u_t_i + gamma * (u_t_i_cond - u_t_i)
+            u_hat_t_i = u_t_i + gamma * (u_t_i_cond - u_t_i)
 
             # SDE Eq: 10
-            u_hat_t_i = - 1 / (1 - t_i) * (Y_t - gamma * y_1)
+            # u_hat_t_i = - 1 / (1 - t_i) * (Y_t - gamma * y_1)
 
-            diffusion = torch.sqrt(2 * (1 - gamma)* t_i / (1 - t_i))
-            noise = torch.randn_like(Y_t)
+            # diffusion = torch.sqrt(2 * (1 - gamma)* t_i / (1 - t_i))
+            # noise = torch.randn_like(Y_t)
             
             # print((u_hat_t_i * dt).mean(), (torch.sqrt(dt) * diffusion * noise).mean())
-            Y_t = Y_t + u_hat_t_i * dt +  torch.sqrt(dt) * diffusion * noise
+            # Y_t = Y_t + u_hat_t_i * dt +  torch.sqrt(dt) * diffusion * noise
 
             # update Y_t
-            # Y_t = Y_t + u_hat_t_i * (sigmas[i] - sigmas[i+1])
+            Y_t = Y_t + u_hat_t_i * dt # (sigmas[i] - sigmas[i+1])
 
             # debug print save image 
             debug_latents = self._unpack_latents(Y_t, height * self.vae_scale_factor // 2, width * self.vae_scale_factor // 2, self.vae_scale_factor)
