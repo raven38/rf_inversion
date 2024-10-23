@@ -585,7 +585,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         
         print(timesteps, self.scheduler.sigmas, self.scheduler.timesteps)
         for i, t in enumerate(timesteps):
-            t_i = t / 1000
+            t_i = i / (N-1)
             print(t_i, t)
             dt = torch.tensor(1 / (N-1), dtype=Y_t.dtype, device=device)
             # get the unconditional vector field
@@ -622,7 +622,6 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             # Y_t = Y_t + u_hat_t_i * (sigmas[i] - sigmas[i+1])
 
             # debug print save image 
-            print(height, width, self.vae_scale_factor)
             debug_latents = self._unpack_latents(Y_t, height * self.vae_scale_factor // 2, width * self.vae_scale_factor // 2, self.vae_scale_factor)
             debug_latents = (debug_latents / self.vae.config.scaling_factor) + self.vae.config.shift_factor
             debug_image = self.vae.decode(debug_latents, return_dict=False)[0]
