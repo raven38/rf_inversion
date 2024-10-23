@@ -412,10 +412,11 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
 
         t_start = int(max(num_inference_steps - init_timestep, 0))
         timesteps = self.scheduler.timesteps[t_start * self.scheduler.order :]
+        sigmas = self.scheduler.sigmas[t_start * self.scheduler.order :]
         if hasattr(self.scheduler, "set_begin_index"):
             self.scheduler.set_begin_index(t_start * self.scheduler.order)
 
-        return timesteps, num_inference_steps - t_start
+        return timesteps, sigmas, num_inference_steps - t_start
 
     def check_inputs(
         self,
@@ -617,7 +618,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             # Y_t = Y_t + u_hat_t_i * dt +  torch.sqrt(dt) * diffusion * noise 
 
             # update Y_t
-            Y_t = Y_t + u_hat_t_i * (self.scheduler.sigmas[self.scheduler.step_index] - self.scheduler.sigmas[self.scheduler.step_index + 1])
+            Y_t = Y_t + u_hat_t_i * (sigmas[i] - sigmas[i + 1])
 
         return Y_t
 
@@ -838,7 +839,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             sigmas,
             mu=mu,
         )
-        timesteps, num_inference_steps = self.get_timesteps(num_inference_steps, strength, device)
+        timesteps, sigmas, num_inference_steps = self.get_timesteps(num_inference_steps, strength, device)
 
         if num_inference_steps < 1:
             raise ValueError(
@@ -926,7 +927,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 # diffusion = torch.sqrt(2 * (1-t_i) * (1-eta) / t_i)
                 # noise = torch.randn_like(latents)
 
-                latents = latents + v_hat_t * (self.scheduler.sigmas[self.scheduler.step_index] -  self.scheduler.sigmas[self.scheduler.step_index + 1])
+                latents = latents + v_hat_t * (sigmas[i] -  sigmas[i + 1])
                 # print(t_i, timestep / 1000, dt, eta_t, v_t.mean().item(), latents.mean().item(), v_hat_t.mean().item(), diffusion.mean().item(), noise.mean().item())
                 # if start_timestep <= i < stop_timestep:
                 #    latents = latents + v_hat_t * dt + diffusion * torch.sqrt(dt) * noise
