@@ -583,7 +583,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             guidance = guidance.expand(batch_size)
         
         print(timesteps, self.scheduler.sigmas, self.scheduler.timesteps)
-        for i, t in enumerate(self.scheduler.timesteps[:-2]):
+        for i, t in enumerate(timesteps):
             t_i = 1 - t / 1000
             print(t_i, t)
             dt = torch.tensor(1 / (N-1), dtype=Y_t.dtype, device=device)
@@ -838,7 +838,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             sigmas,
             mu=mu,
         )
-        timesteps, num_inference_steps = self.get_timesteps(num_inference_steps, strength, device)
+        # timesteps, num_inference_steps = self.get_timesteps(num_inference_steps, strength, device)
 
         if num_inference_steps < 1:
             raise ValueError(
@@ -889,7 +889,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
         # 6. Denoising loop
         with self.progress_bar(total=num_inference_steps) as progress_bar:
             y_0 = ori_latents.clone()
-            for i, t in enumerate(self.scheduler.timesteps):
+            for i, t in enumerate(timesteps):
                 t_i = 1 - t / 1000 # torch.tensor(1 - ((i+1) / (len(timesteps))), device=device)
                 print(t_i, t)
                 dt = torch.tensor(1 / (len(timesteps) - 1), device=device)
