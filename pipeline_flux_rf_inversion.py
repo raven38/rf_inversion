@@ -617,7 +617,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             # Y_t = Y_t + u_hat_t_i * dt +  torch.sqrt(dt) * diffusion * noise 
 
             # update Y_t
-            Y_t = Y_t + u_hat_t_i * (self.scheduler.sigmas[i] - self.scheduler.sigmas[i + 1])
+            Y_t = Y_t + u_hat_t_i * (self.scheduler.sigmas[self.scheduler.step_index] - self.scheduler.sigmas[self.scheduler.step_index + 1])
 
         return Y_t
 
@@ -926,7 +926,7 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
                 # diffusion = torch.sqrt(2 * (1-t_i) * (1-eta) / t_i)
                 # noise = torch.randn_like(latents)
 
-                latents = latents + v_hat_t * (self.scheduler.sigmas[i] -  self.scheduler.sigmas[i + 1])
+                latents = latents + v_hat_t * (self.scheduler.sigmas[self.scheduler.step_index] -  self.scheduler.sigmas[self.scheduler.step_index + 1])
                 # print(t_i, timestep / 1000, dt, eta_t, v_t.mean().item(), latents.mean().item(), v_hat_t.mean().item(), diffusion.mean().item(), noise.mean().item())
                 # if start_timestep <= i < stop_timestep:
                 #    latents = latents + v_hat_t * dt + diffusion * torch.sqrt(dt) * noise
