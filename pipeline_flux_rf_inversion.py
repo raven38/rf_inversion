@@ -559,19 +559,19 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
             image_latents = torch.cat([image_latents], dim=0)
         noise = randn_tensor(shape, generator=generator, device=device, dtype=dtype)
         # latents = noise
-        latents = self.scheduler.scale_noise(image_latents, timestep, noise)        
-        latents = self._pack_latents(latents, batch_size, num_channels_latents, height, width)
+        # latents = self.scheduler.scale_noise(image_latents, timestep, noise)        
+        # latents = self._pack_latents(latents, batch_size, num_channels_latents, height, width)
         # image_latents = self._pack_latents(image_latents, batch_size, num_channels_latents, height, width)
         # print((latents - image_latents).abs().mean())
         image_latents = self._pack_latents(image_latents, batch_size, num_channels_latents, height, width)
         ori_image_latents = image_latents.clone()
-        # latents = self.controlled_forward_ode(
-            # image_latents, 
-            # latent_image_ids, 
-            # sigmas, gamma=gamma, null_prompt_embeds=null_prompt_embeds, null_pooled_prompt_embeds=null_pooled_prompt_embeds, null_text_ids=null_text_ids, timesteps=timesteps, guidance=guidance)
+        latents = self.controlled_forward_ode(
+            image_latents, 
+            latent_image_ids, 
+            sigmas, gamma=gamma, null_prompt_embeds=null_prompt_embeds, null_pooled_prompt_embeds=null_pooled_prompt_embeds, null_text_ids=null_text_ids, timesteps=timesteps, guidance=guidance, height=height, width=width)
         return ori_image_latents, latents, latent_image_ids
     
-    def controlled_forward_ode(self, image_latents, latent_image_ids, sigmas, gamma, null_prompt_embeds, null_pooled_prompt_embeds, null_text_ids, timesteps, guidance):
+    def controlled_forward_ode(self, image_latents, latent_image_ids, sigmas, gamma, null_prompt_embeds, null_pooled_prompt_embeds, null_text_ids, timesteps, guidance, height, width):
         """
         Eq 8 dY_t = [u_t(Y_t) + γ(u_t(Y_t|y_1) - u_t(Y_t))]dt
         """
@@ -607,18 +607,26 @@ class FluxRFInversionPipeline(DiffusionPipeline, FluxLoraLoaderMixin):
 
             # controlled vector field
             # Eq 8 dY_t = [u_t(Y_t) + γ(u_t(Y_t|y_1) - u_t(Y_t))]dt
-            u_hat_t_i = u_t_i + gamma * (u_t_i_cond - u_t_i)
+            # u_hat_t_i = u_t_i + gamma * (u_t_i_cond - u_t_i)
 
             # SDE Eq: 10
-            # u_hat_t_i = - 1 / (1 - t_i) * (Y_t - gamma * y_1)
+            u_hat_t_i = - 1 / (1 - t_i) * (Y_t - gamma * y_1)
 
-            # diffusion = torch.sqrt(2 * (1 - gamma)* t_i / (1 - t_i))
-            # noise = torch.randn_like(Y_t)
+            diffusion = torch.sqrt(2 * (1 - gamma)* t_i / (1 - t_i))
+            noise = torch.randn_like(Y_t)
+            
             # print((u_hat_t_i * dt).mean(), (torch.sqrt(dt) * diffusion * noise).mean())
-            # Y_t = Y_t + u_hat_t_i * dt +  torch.sqrt(dt) * diffusion * noise 
+            Y_t = Y_t + u_hat_t_i * dt +  torch.sqrt(dt) * diffusion * noise
+
+                # debug print save image 
+            debug_latents = self._unpack_latents(Y_t, height, width, self.vae_scale_factor)
+            debug_latents = (debug_latents / self.vae.config.scaling_factor) + self.vae.config.shift_factor
+            debug_image = self.vae.decode(debug_latents, return_dict=False)[0]
+            debug_image = self.image_processor.postprocess(debug_image, output_type='pil')
+            debug_image[0].save(f"debug/forward_{i}.png")           
 
             # update Y_t
-            Y_t = Y_t + u_hat_t_i * (sigmas[i] - sigmas[i+1])
+            # Y_t = Y_t + u_hat_t_i * (sigmas[i] - sigmas[i+1])
 
         return Y_t
 
