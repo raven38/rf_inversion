@@ -1,5 +1,9 @@
 outputs/
 *debug/
+uploaded_images/
+
+# hf auth
+hf_config.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
